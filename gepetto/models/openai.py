@@ -44,7 +44,7 @@ class GPT(LanguageModel):
             if not m:
                 print(_("{model} could not complete the request: {error}").format(model=self.model, error=str(e)))
                 return
-            (hard_limit, prompt_tokens) = (int(m.group(1)), int(m.group(2)))
+            (hard_limit, prompt_tokens) = int(m[1]), int(m[2])
             max_tokens = hard_limit - prompt_tokens
             if max_tokens >= 750:
                 print(_("Context length exceeded! Reducing the completion tokens to "

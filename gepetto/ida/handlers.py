@@ -90,7 +90,7 @@ def rename_callback(address, view, response, retries=0):
                               retries=retries + 1))
         return
     try:
-        names = json.loads(j.group(0))
+        names = json.loads(j[0])
     except json.decoder.JSONDecodeError:
         if retries >= 3:  # Give up fixing the JSON after 3 times.
             print(_("Could not obtain valid data from the model, giving up. Dumping the response for manual import:"))
@@ -98,11 +98,16 @@ def rename_callback(address, view, response, retries=0):
             return
         print(_("The JSON document returned is invalid. Asking the model to fix it..."))
         gepetto.config.model.query_model_async(
-            _("Please fix the following JSON document:\n{json}").format(json=j.group(0)),
-            functools.partial(rename_callback,
-                              address=address,
-                              view=view,
-                              retries=retries + 1))
+            _("Please fix the following JSON document:\n{json}").format(
+                json=j[0]
+            ),
+            functools.partial(
+                rename_callback,
+                address=address,
+                view=view,
+                retries=retries + 1,
+            ),
+        )
         return
 
     # The rename function needs the start address of the function
@@ -115,13 +120,12 @@ def rename_callback(address, view, response, retries=0):
             if n in lvars:
                 if view.rename_lvar(lvars[n], names[n], True):
                     replaced.append(n)
-        else:
-            if ida_hexrays.rename_lvar(function_addr, n, names[n]):
-                replaced.append(n)
+        elif ida_hexrays.rename_lvar(function_addr, n, names[n]):
+            replaced.append(n)
 
     # Update possible names left in the function comment
     comment = idc.get_func_cmt(address, 0)
-    if comment and len(replaced) > 0:
+    if comment and replaced:
         for n in replaced:
             comment = re.sub(r'\b%s\b' % n, names[n], comment)
         idc.set_func_cmt(address, comment, 0)

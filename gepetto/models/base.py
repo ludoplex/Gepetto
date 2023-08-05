@@ -11,8 +11,7 @@ def get_model(model, *args, **kwargs):
     :param model:
     :return:
     """
-    if model == "gpt-3.5-turbo" or model == "gpt-4":
-        from gepetto.models.openai import GPT
-        return GPT(model)
-    else:
+    if model not in ["gpt-3.5-turbo", "gpt-4"]:
         raise ValueError(f"Fatal error: {model} does not exist!")
+    from gepetto.models.openai import GPT
+    return GPT(model)
